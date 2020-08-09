@@ -1,0 +1,24 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Custom Script",
+  "dt": "Salary Structure",
+  "modified": "2020-08-08 09:02:38.090869",
+  "name": "Salary Structure-Client",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "script": "frappe.ui.form.on('Salary Structure', {\n    salary_slip_based_on_attendance: function(frm) {\n\t\tfrm.trigger(\"toggle_fields\")\n\t},\n\ttoggle_fields: function(frm) {\n\t\tfrm.toggle_display(['salary_component', 'hour_rate'], frm.doc.salary_slip_based_on_attendance);\n\t\tfrm.toggle_reqd(['salary_component', 'hour_rate'], frm.doc.salary_slip_based_on_attendance);\n\t\tfrm.toggle_reqd(['payroll_frequency'], !frm.doc.salary_slip_based_on_attendance);\n\t}\n})"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Custom Script",
+  "dt": "Salary Slip",
+  "modified": "2020-08-09 16:19:14.430520",
+  "name": "Salary Slip-Client",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "script": "frappe.ui.form.on('Salary Slip', {\n    setup: function (frm) {\n\t\tfrm.add_fetch('company', 'cost_center', 'cost_center');\n\n\t\tfrm.set_query(\"payment_account\", function () {\n\t\t\tvar account_types = [\"Bank\", \"Cash\"];\n\t\t\treturn {\n\t\t\t\tfilters: {\n\t\t\t\t\t\"account_type\": [\"in\", account_types],\n\t\t\t\t\t\"is_group\": 0,\n\t\t\t\t\t\"company\": frm.doc.company\n\t\t\t\t}\n\t\t\t};\n\t\t}),\n\t\tfrm.set_query(\"cost_center\", function () {\n\t\t\treturn {\n\t\t\t\tfilters: {\n\t\t\t\t\t\"is_group\": 0,\n\t\t\t\t\tcompany: frm.doc.company\n\t\t\t\t}\n\t\t\t};\n\t\t}),\n\t\tfrm.set_query(\"project\", function () {\n\t\t\treturn {\n\t\t\t\tfilters: {\n\t\t\t\t\tcompany: frm.doc.company\n\t\t\t\t}\n\t\t\t};\n\t\t});\n\t},\n    onload: function(frm) {\n\t\tfrappe.call({\n        \tmethod: \"customizer.customizer.salary_slip_custom.customize_salary_slip\",\n        \tcallback: (data) => {\n        \t\tconsole.log(data.message);\n        \t}\n        });\n\t},    \n\trefresh: function(frm) {\n\t\tfrappe.call({\n        \tmethod: \"customizer.customizer.salary_slip_custom.customize_salary_slip\",\n        \tcallback: (data) => {\n        \t\tconsole.log(data.message);\n        \t}\n\t\t});\n        if(!frm.doc.__islocal && frm.doc.docstatus == 1) {\n\t\t\tif (!frm.doc.journal_entry){\n\t\t\t\t frm.add_custom_button(__('Salaary JV'), function(){\n\t\t\t\t   frappe.confirm(\n\t\t\t\t\t'Create Salary JV ?',\n\t\t\t\t\tfunction(){\n\t\t\t\t\t\tfrappe.call({\n\t\t\t\t\t\t\tmethod: \"customizer.customizer.salary_slip_custom.make_accrual_jv_entry\",\n\t\t\t\t\t\t\targs:{\n\t\t\t\t\t\t\t\t\"salary_slip\":frm.doc.name\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\tcallback: (data) => {\n\t\t\t\t\t\t\t\tconsole.log(data.message);\n\t\t\t\t\t\t\t\tshow_alert(\"jv created : \"+data.message)\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t});\n\t\t\t\t\t    \n\t\t\t\t\t},  \n\t\t\t\t\tfunction(){\n\t\t\t\t\t }\n\t\t\t\t    )\n\t\t\t\t }, __(\"Create JVs\"));  \n\t\t\t }\n\t\t\telse{\n\t\t\t\t frm.add_custom_button(__('Bank Entry'), function(){\n\t\t\t\t   frappe.confirm(\n\t\t\t\t\t'Create Bank Entry ?',\n\t\t\t\t\tfunction(){\n\t\t\t\t\t\tfrappe.call({\n\t\t\t\t\t\t\tmethod: \"customizer.customizer.salary_slip_custom.create_bank_entry\",\n\t\t\t\t\t\t\targs:{\n\t\t\t\t\t\t\t\t\"salary_slip\":frm.doc.name\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\tcallback: (data) => {\n\t\t\t\t\t\t\t\tconsole.log(data.message);\n\t\t\t\t\t\t\t\tshow_alert(\"jv created : \"+data.message)\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t});\n\t\t\t\t\t    \n\t\t\t\t\t},  \n\t\t\t\t\tfunction(){\n\t\t\t\t\t }\n\t\t\t\t    )\n\t\t\t\t }, __(\"Create JVs\"));\n\t\t\t }\n\t\t}\t\n\t},\n\t\n\tsalary_slip_based_on_attendance: function(frm) {\n\t\tfrm.trigger(\"toggle_fields\");\n\t},\n    toggle_fields: function(frm) {\n\t\tfrm.toggle_display(['hourly_wages', 'timesheets'], cint(frm.doc.salary_slip_based_on_timesheet)===1 || cint(frm.doc.salary_slip_based_on_attendance)===1);\n\n\t\tfrm.toggle_display(['payment_days', 'total_working_days', 'leave_without_pay'],\n\t\t\tfrm.doc.payroll_frequency!=\"\");\n\t}\n,\n\temployee: function(frm) {\n\t    frm.clear_table(\"timesheets\");\n\t    frappe.call({\n        \tmethod: \"customizer.customizer.salary_slip_custom.customize_salary_slip\",\n        \tcallback: (data) => {\n        \t\tconsole.log(data.message);\n\t\t\tfrm.events.get_emp_and_leave_details(frm);\n        \t}});\n\t\t\n\t}\n})\n"
+ }
+]
