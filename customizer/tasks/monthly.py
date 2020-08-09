@@ -53,7 +53,6 @@ def get_emp_list(company,end_date):
 				is_active = 'Yes'
 				and company = %(company)s """,
 			{"company": company})
-	print(sal_struct)
 	if sal_struct:
 		cond=""
 		cond += "and t2.salary_structure IN %(sal_struct)s "

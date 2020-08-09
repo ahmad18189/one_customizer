@@ -59,31 +59,7 @@ def get_holidays_for_employee(employee, start_date, end_date):
 		return holidays
 
 
-	
-def reset_validation_salary_slip(doc, method):
-	from erpnext.hr.doctype.salary_slip.salary_slip import SalarySlip
-	# ~ SalarySlip.validate = validate
 
 
 
-def get_emp_and_leave_details(self):
-	pass
-	# ~ '''First time, load all the components from salary structure'''
-	# ~ if self.employee:
-		# ~ self.set("earnings", [])
-		# ~ self.set("deductions", [])
 
-		# ~ if not self.salary_slip_based_on_timesheet:
-			# ~ self.get_date_details()
-		# ~ self.validate_dates()
-		# ~ joining_date, relieving_date = frappe.get_cached_value("Employee", self.employee,
-			# ~ ["date_of_joining", "relieving_date"])
-
-		# ~ self.get_leave_details(joining_date, relieving_date)
-		# ~ struct = self.check_sal_struct(joining_date, relieving_date)
-
-		# ~ if struct:
-			# ~ self._salary_structure_doc = frappe.get_doc('Salary Structure', struct)
-			# ~ self.salary_slip_based_on_timesheet = self._salary_structure_doc.salary_slip_based_on_timesheet or 0
-			# ~ self.set_time_sheet()
-			# ~ self.pull_sal_struct()

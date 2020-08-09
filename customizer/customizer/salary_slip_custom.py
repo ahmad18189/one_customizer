@@ -20,7 +20,6 @@ def pull_sal_struct(self,doc =None,method= None):
 	if self.salary_slip_based_on_attendance:
 		attendances = frappe.db.sql(""" select sum(working_hours) as total from `tabAttendance` where employee = %(employee)s and attendance_date BETWEEN %(start_date)s AND %(end_date)s and status = 'Present' 
 		and docstatus = 1""", {'employee': self.employee, 'start_date': self.start_date, 'end_date': self.end_date}, as_dict=1)
-		print (attendances)
 		self.salary_structure = self._salary_structure_doc.name
 		self.hour_rate = self._salary_structure_doc.hour_rate
 		
@@ -84,6 +83,8 @@ def make_accrual_jv_entry(salary_slip):
 					"cost_center": doc.cost_center,
 					"project": doc.project
 				})
+
+
 		
 		# Deductions
 		for deduction in deductions:
@@ -92,7 +93,7 @@ def make_accrual_jv_entry(salary_slip):
 			payable_amount -= flt(deduction.amount, precision)
 			accounts.append({
 					"account": deduction.account,
-					"debit_in_account_currency": flt(deduction.amount, precision),
+					"credit_in_account_currency": flt(deduction.amount, precision),
 					"party_type": '',
 					"cost_center": doc.cost_center,
 					"project": doc.project
@@ -146,6 +147,9 @@ def make_accrual_jv_entry(salary_slip):
 @frappe.whitelist()
 def create_bank_entry(salary_slip):
 	doc = frappe.get_doc("Salary Slip",salary_slip)
+	if not doc.payment_account:
+		frappe.throw(_("Please set Payment Account in Salary Slip {0}")
+			.format(doc.name))
 	default_payroll_payable_account = frappe.get_cached_value('Company',
 			{"company_name": doc.company},  "default_payroll_payable_account")
 
@@ -178,6 +182,7 @@ def create_bank_entry(salary_slip):
 		}
 	])
 	journal_entry.save(ignore_permissions = True)
+	return journal_entry.name
 	
 	
 def get_salary_component_account(salary_component,company):
